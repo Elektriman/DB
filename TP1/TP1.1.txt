@@ -1,0 +1,42 @@
+DROP TABLE IF EXISTS materiel;
+DROP TABLE IF EXISTS contrat;
+DROP TABLE IF EXISTS type;
+DROP TABLE IF EXISTS societe;
+
+CREATE TABLE societe (
+	code_societe INTEGER,
+	raison_sociale VARCHAR(255) NOT NULL,
+	adresse VARCHAR(255) NOT NULL,
+	ville VARCHAR(255) NOT NULL,
+	code_postal INTEGER NOT NULL,
+	PRIMARY KEY (code_societe)
+);
+
+CREATE TABLE contrat (
+    no_contrat INTEGER,
+    date_expiration DATE,
+    duree INTERVAL,
+    montant REAL CHECK (montant >= 0),
+    societe INTEGER,
+    PRIMARY KEY (no_contrat),
+    FOREIGN KEY (societe) REFERENCES societe(code_societe)
+);
+
+CREATE TABLE type (
+	no_type INTEGER,
+	designation VARCHAR(255) NOT NULL,
+	caracteristiques TEXT NOT NULL,
+	PRIMARY KEY (no_type)
+);
+
+CREATE TABLE materiel (
+	no_materiel INTEGER,
+	no_serie INTEGER NOT NULL,
+	designation VARCHAR(255) NOT NULL,
+	no_contrat INTEGER NOT NULL,
+	type INTEGER NOT NULL,
+	PRIMARY KEY (no_materiel),
+	UNIQUE (no_serie),
+	FOREIGN KEY (no_contrat) REFERENCES contrat(no_contrat),
+	FOREIGN KEY (type) REFERENCES type(no_type)
+);

@@ -1,0 +1,79 @@
+SET datestyle TO 'european';
+
+DROP TABLE IF EXISTS remplacements;
+DROP TABLE IF EXISTS produits;
+DROP TABLE IF EXISTS interventions;
+DROP TABLE IF EXISTS factures;
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS tauxhoraire;
+
+DROP SEQUENCE IF EXISTS nc;
+DROP SEQUENCE IF EXISTS nf;
+
+CREATE SEQUENCE nc START WITH 101 INCREMENT BY 1;
+CREATE SEQUENCE nf START WITH 1001 INCREMENT BY 1;
+
+CREATE TABLE clients (
+	no_client INTEGER DEFAULT nextval('nc'),
+	nom VARCHAR(255) NOT NULL,
+	prenom VARCHAR(255),
+	adresse VARCHAR(255) NOT NULL,
+	PRIMARY KEY (no_client)
+);
+
+CREATE TABLE factures (
+	no_facture INTEGER DEFAULT nextval('nf'),
+	date_facture DATE NOT NULL,
+	etat CHAR(1) CHECK (etat SIMILAR TO '(C|R)') DEFAULT 'C',
+	PRIMARY KEY (no_facture)
+);
+
+CREATE TABLE interventions (
+	no_interv INTEGER,
+	date_interv DATE NOT NULL,
+	nom_resp VARCHAR(255) NOT NULL,
+	nom_interv VARCHAR(255) NOT NULL,
+	temps real CHECK (temps > 0 AND temps <= 8) NOT NULL,
+	no_client INTEGER NOT NULL,
+	no_facture INTEGER NOT NULL,
+	PRIMARY KEY (no_interv),
+	FOREIGN KEY (no_client) REFERENCES clients(no_client),
+	FOREIGN KEY (no_facture) REFERENCES factures(no_facture)
+);
+
+CREATE TABLE produits (
+	reference CHAR(5) CHECK (reference LIKE 'DT___'),
+	designation VARCHAR(255) NOT NULL,
+	prixHT real NOT NULL,
+	PRIMARY KEY (reference)
+);
+
+CREATE TABLE remplacements (
+	reference CHAR(5),
+	no_interv INTEGER NOT NULL,
+	qte_remplacee INTEGER NOT NULL,
+	PRIMARY KEY (reference, no_interv),
+	FOREIGN KEY (reference) REFERENCES produits(reference),
+	FOREIGN KEY (no_interv) REFERENCES interventions(no_interv)
+);
+
+ALTER TABLE clients ADD COLUMN ville VARCHAR(255);
+ALTER TABLE clients ADD COLUMN code_postal INTEGER;
+ALTER TABLE clients ADD COLUMN no_telephone CHAR(14) CHECK (no_telephone SIMILAR TO '([[:digit:]]{2}-){4}[[:digit:]]{2}');
+
+ALTER TABLE clients ALTER COLUMN ville SET NOT NULL;
+ALTER TABLE clients ALTER COLUMN code_postal SET NOT NULL;
+ALTER TABLE clients ALTER COLUMN no_telephone SET NOT NULL;
+
+CREATE TABLE tauxhoraire (
+	codetaux INTEGER,
+	tauxhoraire REAL,
+	PRIMARY KEY (codetaux)
+);
+
+ALTER TABLE interventions ADD COLUMN codetaux INTEGER NOT NULL;
+ALTER TABLE interventions ADD FOREIGN KEY (codetaux) REFERENCES tauxhoraire(codetaux);
+
+ALTER TABLE produits ADD COLUMN qte_en_stock INTEGER DEFAULT 1;
+ALTER TABLE produits ADD COLUMN qte_securite INTEGER CHECK (qte_en_stock >= qte_securite) DEFAULT 0;
+
